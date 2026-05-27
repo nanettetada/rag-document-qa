@@ -2,6 +2,12 @@ numpy>=1.24
 sentence-transformers>=2.7
 faiss-cpu>=1.7.4
 streamlit>=1.32
-# Optional LLM backends (uncomment one if you want real generation)
-# openai>=1.20
-# anthropic>=0.25
+pypdf>=4.0          # PDF loading
+tiktoken>=0.6       # token counting for context-window management
+
+# LLM backends — install the one(s) you want to use. Listed in preference order.
+groq>=0.9           # default: free tier, llama-3.3-70b
+anthropic>=0.34     # Claude
+openai>=1.30        # GPT
+# ollama>=0.2       # uncomment if running Ollama locally
+# transformers>=4.40; torch>=2.2   # offline local fallback (heavy)

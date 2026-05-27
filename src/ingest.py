@@ -1,12 +1,10 @@
-"""Load documents, chunk them, embed with sentence-transformers, build a FAISS index."""
+"""Build the FAISS index from documents in data/docs/."""
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-import numpy as np
-from sentence_transformers import SentenceTransformer
 import faiss
+from sentence_transformers import SentenceTransformer
 
 from .config import (
     CHUNK_OVERLAP,
@@ -17,17 +15,7 @@ from .config import (
     INDEX_DIR,
     INDEX_FILE,
 )
-
-
-def read_documents(docs_dir: Path = DOCS_DIR) -> list[dict]:
-    docs = []
-    for path in sorted(docs_dir.glob("**/*")):
-        if path.suffix.lower() not in {".txt", ".md"}:
-            continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        if text.strip():
-            docs.append({"source": path.name, "text": text})
-    return docs
+from .loaders import load_documents
 
 
 def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
@@ -48,20 +36,17 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
 
 
 def build_index() -> int:
-    docs = read_documents()
+    docs = load_documents(DOCS_DIR)
     if not docs:
         raise SystemExit(
-            f"No documents found in {DOCS_DIR}. Add .txt or .md files and re-run."
+            f"No documents found in {DOCS_DIR}. "
+            "Add .txt / .md / .pdf files and re-run."
         )
 
     records = []
     for doc in docs:
         for i, chunk in enumerate(chunk_text(doc["text"])):
-            records.append({
-                "source": doc["source"],
-                "chunk_id": i,
-                "text": chunk,
-            })
+            records.append({"source": doc["source"], "chunk_id": i, "text": chunk})
 
     print(f"Loaded {len(docs)} documents -> {len(records)} chunks")
     print(f"Embedding with {EMBED_MODEL} (first run downloads the model)...")
