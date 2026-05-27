@@ -1,0 +1,7 @@
+numpy>=1.24
+sentence-transformers>=2.7
+faiss-cpu>=1.7.4
+streamlit>=1.32
+# Optional LLM backends (uncomment one if you want real generation)
+# openai>=1.20
+# anthropic>=0.25

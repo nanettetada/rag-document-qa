@@ -1,0 +1,38 @@
+Aurora Robotics — Limited Warranty Policy
+
+1. WARRANTY PERIOD
+
+The Aurora-X1 drone, the Aurora-X1 Pro, the Aurora Rover Mini, and the Aurora Sky Dock are covered by a 24-month limited manufacturer warranty from the date of purchase. Aurora batteries (AB-32) and accessories such as propellers and cables are covered for 12 months.
+
+2. WHAT IS COVERED
+
+This warranty covers defects in materials and workmanship under normal use. Examples include:
+  - Motors that fail without external damage
+  - Faulty gimbal motors or sensors
+  - Manufacturing defects in the airframe
+  - Battery cells that fail to hold charge under correct usage
+
+3. WHAT IS NOT COVERED
+
+The warranty does not cover:
+  - Accidental damage (crashes, water ingress, drops)
+  - Damage caused by unauthorised firmware modifications
+  - Cosmetic damage that does not affect performance
+  - Damage from operating outside published environmental limits
+  - Lost drones (e.g. fly-away events not caused by a documented firmware defect)
+
+4. AURORA CARE+
+
+Customers may purchase Aurora Care+ within 30 days of original purchase. Aurora Care+ extends the warranty to 36 months total, covers accidental damage (with a per-incident excess of USD 49), and provides a 48-hour replacement guarantee in supported regions.
+
+5. HOW TO CLAIM
+
+To file a claim, email support@aurora-robotics.example with the serial number, proof of purchase, and a description of the issue. A support agent will respond within 1 business day. Approved warranty repairs are completed at no cost to the customer; shipping is paid by Aurora Robotics within the country of purchase.
+
+6. RETURNS
+
+In addition to the warranty, Aurora Robotics offers a 14-day no-questions-asked return policy on direct-to-consumer purchases. The product must be returned in its original packaging and in good cosmetic condition.
+
+7. WARRANTY TRANSFERS
+
+The warranty is tied to the original purchaser and cannot be transferred to a subsequent owner unless the device is registered through the official Aurora resale programme.
