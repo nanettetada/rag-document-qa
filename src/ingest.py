@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import json
 
-import faiss
-from sentence_transformers import SentenceTransformer
-
 from .config import (
     CHUNK_OVERLAP,
     CHUNK_SIZE,
@@ -36,6 +33,11 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
 
 
 def build_index() -> int:
+    # Heavy imports kept local so importing this module (done at app startup)
+    # stays instant — sentence-transformers pulls in torch and is slow to load.
+    import faiss
+    from sentence_transformers import SentenceTransformer
+
     docs = load_documents(DOCS_DIR)
     if not docs:
         raise SystemExit(

@@ -51,41 +51,33 @@ def _has(env_var: str) -> bool:
     return bool(os.getenv(env_var))
 
 
+def _installed(module: str) -> bool:
+    """Check whether a module is importable WITHOUT importing it.
+
+    Importing torch/transformers just to probe availability costs 15-30s and
+    makes the app feel frozen on every rerun — find_spec is effectively free.
+    """
+    import importlib.util
+    try:
+        return importlib.util.find_spec(module) is not None
+    except (ImportError, ValueError):
+        return False
+
+
 def available_backends() -> list[str]:
     out = []
     for b in BACKEND_PREFERENCE:
-        if b == "groq" and _has("GROQ_API_KEY"):
-            try:
-                import groq  # noqa: F401
-                out.append("groq")
-            except ImportError:
-                pass
-        elif b == "anthropic" and _has("ANTHROPIC_API_KEY"):
-            try:
-                import anthropic  # noqa: F401
-                out.append("anthropic")
-            except ImportError:
-                pass
-        elif b == "openai" and _has("OPENAI_API_KEY"):
-            try:
-                import openai  # noqa: F401
-                out.append("openai")
-            except ImportError:
-                pass
-        elif b == "ollama":
-            try:
-                import ollama  # noqa: F401
-                # If ollama is installed we assume a local server may be reachable.
-                out.append("ollama")
-            except ImportError:
-                pass
-        elif b == "hf_local":
-            try:
-                import transformers  # noqa: F401
-                import torch  # noqa: F401
-                out.append("hf_local")
-            except ImportError:
-                pass
+        if b == "groq" and _has("GROQ_API_KEY") and _installed("groq"):
+            out.append("groq")
+        elif b == "anthropic" and _has("ANTHROPIC_API_KEY") and _installed("anthropic"):
+            out.append("anthropic")
+        elif b == "openai" and _has("OPENAI_API_KEY") and _installed("openai"):
+            out.append("openai")
+        elif b == "ollama" and _installed("ollama"):
+            # If ollama is installed we assume a local server may be reachable.
+            out.append("ollama")
+        elif b == "hf_local" and _installed("transformers") and _installed("torch"):
+            out.append("hf_local")
     return out
 
 

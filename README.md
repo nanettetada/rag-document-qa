@@ -21,7 +21,12 @@
 
 ---
 
-## :dart: Why I rebuilt this
+<p align="center">
+  <img src="docs/preview.png" alt="Dashboard preview" width="900">
+</p>
+
+
+## Why I rebuilt this
 
 The first version of this project did **retrieval** — given a question, it found the closest passage in a FAISS index and printed it back. Without an API key the "fallback" was literally a copy-paste of the most relevant snippet.
 
@@ -36,7 +41,7 @@ The rebuild is what RAG is *supposed* to feel like:
 - **PDF + Markdown + TXT** loaders, with on-the-fly re-indexing from the Streamlit sidebar
 - **Citations** under every reply so you can audit the source
 
-## :sparkles: At a glance
+## At a glance
 
 |  |  |
 |---|---|
@@ -47,7 +52,7 @@ The rebuild is what RAG is *supposed* to feel like:
 | **UI** | Streamlit chat with avatars, citation expander, drag-drop document upload |
 | **Stack** | sentence-transformers · FAISS · cross-encoder · Streamlit · plain Python (no LangChain) |
 
-## :building_construction: How it works
+## How it works
 
 ```
    You ask a question
@@ -65,7 +70,7 @@ The rebuild is what RAG is *supposed* to feel like:
    Answer + citations ─── rendered token-by-token into the Streamlit chat
 ```
 
-## :computer: Quick start
+## Quick start
 
 ```bash
 pip install -r requirements.txt
@@ -88,7 +93,7 @@ python -m src.rag                       # interactive multi-turn chat
 python -m src.rag "What is the warranty on the X1?"
 ```
 
-## :open_file_folder: Use it with your own documents
+## Use it with your own documents
 
 Two ways:
 
@@ -100,7 +105,7 @@ Two ways:
 python -m src.ingest
 ```
 
-## :rocket: Backends
+## Backends
 
 The first backend whose key/runtime is available wins. Preference order:
 
@@ -114,7 +119,7 @@ The first backend whose key/runtime is available wins. Preference order:
 
 Switch backends live from the sidebar.
 
-## :speech_balloon: Example session
+## Example session
 
 ```
 > What's the warranty period on the Aurora-X1?
@@ -136,7 +141,7 @@ Sources:
 
 Notice the second answer understood what "it" referred to — that's the chat memory at work.
 
-## :file_folder: Project layout
+## Project layout
 
 ```
 doc-grounded-rag/
@@ -155,7 +160,7 @@ doc-grounded-rag/
     └── docs/            # drop your documents here
 ```
 
-## :rocket: What I'd build next
+## What I'd build next
 
 - Hybrid retrieval (BM25 + dense) for better keyword recall.
 - Per-document namespaces so one index can serve multiple users.

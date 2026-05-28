@@ -8,6 +8,7 @@ data/index/
 
 # Streamlit
 .streamlit/
+st_log.txt
 
 # Env / IDE
 .env

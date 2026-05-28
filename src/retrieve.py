@@ -4,9 +4,6 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-import faiss
-from sentence_transformers import SentenceTransformer
-
 from .config import (
     CHUNKS_FILE,
     EMBED_MODEL,
@@ -19,7 +16,10 @@ from .config import (
 
 
 @lru_cache(maxsize=1)
-def _embedder() -> SentenceTransformer:
+def _embedder():
+    # Imported lazily — sentence-transformers pulls in torch and can take
+    # tens of seconds to import, which would otherwise freeze app startup.
+    from sentence_transformers import SentenceTransformer
     return SentenceTransformer(EMBED_MODEL)
 
 
@@ -35,6 +35,7 @@ def _index_and_chunks():
         raise FileNotFoundError(
             f"No index at {INDEX_FILE}. Run `python -m src.ingest` first."
         )
+    import faiss  # lazy — faiss import is a few seconds; keep it off the startup path
     index = faiss.read_index(str(INDEX_FILE))
     chunks = json.loads(CHUNKS_FILE.read_text())
     return index, chunks
