@@ -38,16 +38,32 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    #MainMenu, footer {visibility: hidden;}
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+    html, body, [class*="css"], .stMarkdown, button, input, textarea {
+        font-family: 'Manrope', system-ui, sans-serif;
+    }
+    #MainMenu, header, footer { visibility: hidden; }
+    .block-container { padding-top: 1.4rem; }
+
     .badge {
-        display: inline-block;
-        background: #eef0f2; color: #3a434d;
+        display: inline-block; background: #eef0f2; color: #3a434d;
         padding: 4px 10px; border-radius: 12px;
-        font-size: 12px; font-weight: 600;
-        margin-right: 6px;
+        font-size: 12px; font-weight: 600; margin-right: 6px;
     }
     .badge.ok { background: #e7f3ec; color: #2f7a52; }
     .badge.warn { background: #fbf1e2; color: #9a6a18; }
+
+    .hero { background: linear-gradient(135deg, #5B5BD6 0%, #8B7BF0 100%);
+        border-radius: 22px; padding: 24px 28px 20px 28px; color:#fff;
+        box-shadow: 0 16px 36px rgba(91,91,214,.28); }
+    .hero .brand { font-size:13px; font-weight:700; opacity:.92; display:flex;
+        align-items:center; gap:8px; }
+    .hero .dot { width:9px; height:9px; border-radius:50%; background:#fff; display:inline-block; }
+    .hero .value { font-size:27px; font-weight:800; line-height:1.15; margin-top:12px; letter-spacing:-.4px; }
+    .hero .sub { font-size:14.5px; opacity:.95; margin-top:7px; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+    .chip { background: rgba(255,255,255,.18); border-radius:11px; padding:8px 12px; font-size:12.5px; }
+    .chip b { font-weight:800; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -55,19 +71,21 @@ st.markdown(
 
 st.markdown(
     """
-    <div style="margin:-6px 0 4px 0;">
-      <div style="font-size:13px; letter-spacing:.8px; color:#6b7280;
-                  text-transform:uppercase;">Retrieval-augmented chat</div>
-      <h1 style="margin:2px 0 4px 0; font-size:28px; font-weight:700; color:#1f2933;">
-        Ask questions about your own documents</h1>
-      <div style="font-size:15px; color:#6b7280;">
-        Answers are written by a language model but grounded in the passages it
-        retrieves, with a citation behind every reply.</div>
+    <div class="hero">
+      <div class="brand"><span class="dot"></span> Retrieval-augmented chat</div>
+      <div class="value">Ask questions about your own documents</div>
+      <div class="sub">Answers are written by a language model but grounded in the passages
+        it retrieves — with a citation behind every reply, so you can check the source.</div>
+      <div class="chips">
+        <span class="chip">embeddings <b>MiniLM</b></span>
+        <span class="chip">search <b>FAISS + reranker</b></span>
+        <span class="chip">every answer <b>cited</b></span>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
-st.divider()
+st.write("")
 
 # --------------------------------------------------------------------------- #
 # Sidebar — backend, settings, document management
