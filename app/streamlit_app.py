@@ -5,15 +5,13 @@ Features:
 * Multi-turn conversation memory
 * Drop-in document upload (.txt / .md / .pdf) with on-the-fly re-indexing
 * Source citations under every answer
-* Backend selector + status badge in the sidebar
+* Backend selector in the main pane (sidebar is hidden on mobile)
 """
 from __future__ import annotations
 
-import shutil
 import sys
 from pathlib import Path
 
-# Allow running with `streamlit run app/streamlit_app.py` from the project root.
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -21,133 +19,187 @@ if str(ROOT) not in sys.path:
 import streamlit as st  # noqa: E402
 
 from src.config import DOCS_DIR, INDEX_FILE, MODEL_DEFAULTS  # noqa: E402
-from src.generate import available_backends, pick_backend  # noqa: E402
+from src.generate import available_backends  # noqa: E402
 from src.ingest import build_index  # noqa: E402
 from src.rag import ask_stream, trim_history  # noqa: E402
 
 
 st.set_page_config(
     page_title="Document chat",
-    page_icon="💬",
+    page_icon="•",
     layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 # --------------------------------------------------------------------------- #
-# Styling
+# Styling — editorial light theme, mobile-first
 # --------------------------------------------------------------------------- #
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-    html, body, [class*="css"], .stMarkdown, button, input, textarea {
-        font-family: 'Manrope', system-ui, sans-serif;
-    }
-    #MainMenu, header, footer { visibility: hidden; }
-    .block-container { padding-top: 1.4rem; }
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
 
-    .badge {
-        display: inline-block; background: #eef0f2; color: #3a434d;
-        padding: 4px 10px; border-radius: 12px;
-        font-size: 12px; font-weight: 600; margin-right: 6px;
+    html, body, [class*="css"], .stMarkdown, p, span, div, label, input, textarea, button {
+        font-family: 'Inter', system-ui, sans-serif;
     }
-    .badge.ok { background: #e7f3ec; color: #2f7a52; }
-    .badge.warn { background: #fbf1e2; color: #9a6a18; }
+    .stApp { background: #FBFAF7; }
+    #MainMenu, footer, header[data-testid="stHeader"] { display: none; }
+    .block-container {
+        padding-top: 1.6rem;
+        padding-bottom: 4.5rem;
+        max-width: 760px;
+    }
 
-    .hero { background: linear-gradient(135deg, #5B5BD6 0%, #8B7BF0 100%);
-        border-radius: 22px; padding: 24px 28px 20px 28px; color:#fff;
-        box-shadow: 0 16px 36px rgba(91,91,214,.28); }
-    .hero .brand { font-size:13px; font-weight:700; opacity:.92; display:flex;
-        align-items:center; gap:8px; }
-    .hero .dot { width:9px; height:9px; border-radius:50%; background:#fff; display:inline-block; }
-    .hero .value { font-size:27px; font-weight:800; line-height:1.15; margin-top:12px; letter-spacing:-.4px; }
-    .hero .sub { font-size:14.5px; opacity:.95; margin-top:7px; }
-    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
-    .chip { background: rgba(255,255,255,.18); border-radius:11px; padding:8px 12px; font-size:12.5px; }
-    .chip b { font-weight:800; }
+    /* Wordmark header */
+    .wordmark { font-family: 'Fraunces', serif; font-weight: 600; font-size: 30px;
+                color: #1A1A17; letter-spacing: -0.4px; line-height: 1.1; margin: 0; }
+    .wordmark .dot { color: #5B5BD6; }
+    .tagline { color: #7A756A; font-size: 14.5px; margin: 6px 0 0 0;
+               max-width: 560px; line-height: 1.55; }
+
+    /* Backend strip */
+    .backend-row { display: flex; align-items: center; gap: 10px;
+                   flex-wrap: wrap; margin: 14px 0 4px 0; }
+    .backend-row .label { font-size: 12px; font-weight: 600; color: #5B5BD6;
+                          letter-spacing: 0.4px; text-transform: uppercase; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; background: #fff;
+            border: 1px solid #E7E3DA; border-radius: 999px; padding: 5px 12px;
+            font-size: 12.5px; color: #4A463E; }
+    .pill.ok  { border-color: #BFD8C6; color: #16794C; }
+    .pill.warn{ border-color: #E6CFA8; color: #8C5A0E; }
+    .pill .dot{ width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .rule { height: 1px; background: #E7E3DA; border: 0; margin: 18px 0 14px 0; }
+
+    /* Section heading */
+    .sec { font-family: 'Fraunces', serif; font-weight: 500; font-size: 19px;
+           color: #1A1A17; margin: 6px 0 2px 0; letter-spacing: -0.2px; }
+    .sec-sub { color: #7A756A; font-size: 14px; margin: 0 0 10px 0; line-height: 1.5; }
+
+    /* Note panels */
+    .note { background: #F3F1EA; border-radius: 12px; padding: 12px 14px;
+            color: #4A463E; font-size: 13.5px; line-height: 1.55; }
+
+    /* Chat bubbles */
+    [data-testid="stChatMessage"] {
+        background: transparent; border: 0; padding: 0 0 6px 0;
+    }
+    [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
+        font-size: 15px; line-height: 1.6; color: #2A2620;
+    }
+    [data-testid="stChatMessageAvatarUser"],
+    [data-testid="stChatMessageAvatarAssistant"] {
+        background: #fff; border: 1px solid #E7E3DA; color: #1A1A17;
+    }
+
+    /* Chat input — make it readable on phones */
+    [data-testid="stChatInput"] textarea {
+        font-size: 16px !important;  /* iOS won't auto-zoom at 16px+ */
+        line-height: 1.5;
+    }
+
+    /* Expanders */
+    details summary { font-size: 13.5px; color: #5B5BD6; font-weight: 500; }
+
+    /* Buttons */
+    .stButton > button {
+        font-size: 14px; font-weight: 500; border-radius: 10px;
+        border: 1px solid #E7E3DA; background: #fff; color: #1A1A17;
+        padding: 8px 16px;
+    }
+    .stButton > button:hover { border-color: #5B5BD6; color: #5B5BD6; }
+
+    /* File uploader */
+    [data-testid="stFileUploaderDropzone"] {
+        background: #fff; border: 1px dashed #D6CFC0; border-radius: 12px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 640px) {
+        .block-container { padding-left: 1rem; padding-right: 1rem;
+                           padding-top: 1.1rem; max-width: 100%; }
+        .wordmark { font-size: 25px; }
+        .tagline { font-size: 14px; }
+        .sec { font-size: 17px; }
+        .pill { font-size: 12px; padding: 4px 10px; }
+        [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
+            font-size: 14.5px;
+        }
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+# --------------------------------------------------------------------------- #
+# Header
+# --------------------------------------------------------------------------- #
 st.markdown(
     """
-    <div class="hero">
-      <div class="brand"><span class="dot"></span> Retrieval-augmented chat</div>
-      <div class="value">Ask questions about your own documents</div>
-      <div class="sub">Answers are written by a language model but grounded in the passages
-        it retrieves — with a citation behind every reply, so you can check the source.</div>
-      <div class="chips">
-        <span class="chip">embeddings <b>MiniLM</b></span>
-        <span class="chip">search <b>FAISS + reranker</b></span>
-        <span class="chip">every answer <b>cited</b></span>
-      </div>
-    </div>
+    <h1 class="wordmark">Document chat<span class="dot">.</span></h1>
+    <p class="tagline">Ask questions about your own documents. Every answer is
+    grounded in retrieved passages and shows the sources behind it, so you can
+    check the receipts.</p>
     """,
     unsafe_allow_html=True,
 )
-st.write("")
 
 # --------------------------------------------------------------------------- #
-# Sidebar — backend, settings, document management
+# Backend picker — main pane, so phone users don't have to dig in the sidebar
 # --------------------------------------------------------------------------- #
-with st.sidebar:
-    st.subheader("LLM backend")
-    avail = available_backends()
-    if avail:
-        chosen = st.selectbox(
-            "Active backend",
-            options=avail,
-            format_func=lambda b: f"{b} ({MODEL_DEFAULTS[b]})",
-            index=0,
-        )
+avail = available_backends()
+chosen = None
+
+st.markdown('<div class="backend-row"><span class="label">Model</span>',
+            unsafe_allow_html=True)
+
+if avail:
+    chosen = st.selectbox(
+        "Active backend",
+        options=avail,
+        format_func=lambda b: f"{b} · {MODEL_DEFAULTS[b]}",
+        index=0,
+        label_visibility="collapsed",
+    )
+    st.markdown(
+        f'<span class="pill ok"><span class="dot"></span>Connected · '
+        f'<code>{chosen}</code></span></div>',
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown(
+        '<span class="pill warn"><span class="dot"></span>'
+        'No backend reachable</span></div>',
+        unsafe_allow_html=True,
+    )
+    with st.expander("How to connect a backend"):
         st.markdown(
-            f'<span class="badge ok">CONNECTED</span> <code>{chosen}</code>',
-            unsafe_allow_html=True,
-        )
-    else:
-        chosen = None
-        st.markdown(
-            '<span class="badge warn">NO BACKEND</span>',
-            unsafe_allow_html=True,
-        )
-        st.warning(
-            "No LLM backend reachable. Set one of these env vars and refresh:\n\n"
+            "Set one of these environment variables and refresh:\n\n"
             "- `GROQ_API_KEY` — free tier at console.groq.com (recommended)\n"
             "- `ANTHROPIC_API_KEY` — Claude\n"
             "- `OPENAI_API_KEY` — GPT\n\n"
             "Or install `ollama` / `transformers` for offline use."
         )
-        with st.expander("Why a real LLM?"):
-            st.markdown(
-                "Earlier versions of this app returned the most-relevant passage "
-                "verbatim when no key was set. That's retrieval — not really a "
-                "chatbot. The new version requires a generative model so answers "
-                "are written, conversational, and aware of prior turns."
-            )
 
-    st.divider()
-    st.subheader("Documents")
-    DOCS_DIR.mkdir(parents=True, exist_ok=True)
-    existing = sorted([p.name for p in DOCS_DIR.glob("*") if p.is_file()])
-    if existing:
-        st.caption(f"{len(existing)} file(s) in `data/docs/`")
-        with st.expander("Show indexed files"):
-            for n in existing:
-                st.markdown(f"- {n}")
+# --------------------------------------------------------------------------- #
+# Documents — kept in main pane (mobile-friendly)
+# --------------------------------------------------------------------------- #
+DOCS_DIR.mkdir(parents=True, exist_ok=True)
+with st.expander("Your documents", expanded=not INDEX_FILE.exists()):
+    existing_main = sorted([p.name for p in DOCS_DIR.glob("*") if p.is_file()])
+    if existing_main:
+        st.caption(f"{len(existing_main)} file(s) indexed: " + ", ".join(existing_main))
     else:
-        st.caption("No documents yet — upload some below.")
-
-    uploads = st.file_uploader(
-        "Add documents",
-        type=["txt", "md", "pdf"],
-        accept_multiple_files=True,
+        st.caption("No documents yet — upload a .txt, .md or .pdf to get started.")
+    main_uploads = st.file_uploader(
+        "Upload documents", type=["txt", "md", "pdf"],
+        accept_multiple_files=True, key="main_uploader",
     )
-    if uploads:
-        for up in uploads:
+    if main_uploads:
+        for up in main_uploads:
             (DOCS_DIR / up.name).write_bytes(up.getbuffer())
-        st.success(f"Saved {len(uploads)} file(s) to {DOCS_DIR}.")
-
-    if st.button("Rebuild index", use_container_width=True):
+        st.success(f"Saved {len(main_uploads)} file(s).")
+    if st.button("Build / rebuild index", use_container_width=True, key="main_rebuild"):
         with st.spinner("Rebuilding index..."):
             try:
                 n = build_index()
@@ -156,37 +208,18 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"Ingest failed: {e}")
 
-    st.divider()
-    if st.button("Clear chat", use_container_width=True):
-        st.session_state.history = []
-        st.session_state.is_demo = False
-        st.rerun()
-
-    st.divider()
-    st.subheader("How it works")
-    st.markdown(
-        "1. **Chunk** documents and embed them with MiniLM\n"
-        "2. **Retrieve** the top candidates via FAISS\n"
-        "3. **Rerank** with a cross-encoder for quality\n"
-        "4. **Generate** a written answer from an LLM, grounded in the passages\n"
-        "5. **Cite** sources on every reply\n"
-        "6. **Remember** prior turns so follow-up questions feel natural"
-    )
+st.markdown('<hr class="rule" />', unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------- #
-# Main pane — chat
+# Chat
 # --------------------------------------------------------------------------- #
 if not INDEX_FILE.exists():
     st.info(
-        "No search index yet. Drop some `.txt` / `.md` / `.pdf` files in the "
-        "sidebar and click **Rebuild index**, or run `python -m src.ingest` "
-        "from the project root."
+        "No search index yet. Open **Your documents** above and drop in a "
+        "`.txt`, `.md` or `.pdf`, then click **Build / rebuild index**."
     )
     st.stop()
 
-# Seed a demo conversation when no real backend is available, so the UI is
-# meaningful for screenshots and first-time visitors. Cleared on first real
-# question or when the user clicks "Clear chat".
 DEMO_HISTORY = [
     {"role": "user", "content": "What's the warranty on the Aurora-X1?"},
     {
@@ -218,16 +251,20 @@ DEMO_HISTORY = [
 ]
 
 if "history" not in st.session_state:
-    # Seed a sample conversation on first load so the landing screen shows what
-    # the bot does. It clears the moment the user asks their own question.
     st.session_state.history = list(DEMO_HISTORY)
     st.session_state.is_demo = True
 
-if st.session_state.get("is_demo"):
-    st.caption(
-        "Sample conversation — ask your own question below, or use *Clear chat*, "
-        "to start fresh."
-    )
+col_a, col_b = st.columns([4, 1])
+with col_a:
+    if st.session_state.get("is_demo"):
+        st.caption("Sample conversation — ask your own question below.")
+    else:
+        st.caption(f"{len(st.session_state.history) // 2} turn(s) in this chat.")
+with col_b:
+    if st.button("Clear", use_container_width=True):
+        st.session_state.history = []
+        st.session_state.is_demo = False
+        st.rerun()
 
 # Replay prior turns
 for turn in st.session_state.history:
@@ -243,9 +280,8 @@ for turn in st.session_state.history:
 
 # New input
 if not avail:
-    st.chat_input("Set an API key in the sidebar to start chatting...", disabled=True)
+    st.chat_input("Set an API key above to start chatting...", disabled=True)
 elif question := st.chat_input("Ask a question..."):
-    # Drop the sample conversation the first time the user asks something real.
     if st.session_state.get("is_demo"):
         st.session_state.history = []
         st.session_state.is_demo = False
@@ -269,7 +305,6 @@ elif question := st.chat_input("Ask a question..."):
                 msg_box.error(f"Retrieval failed: {e}")
                 st.stop()
 
-        # Stream tokens
         buf = ""
         try:
             for token in iterator:
@@ -297,3 +332,16 @@ elif question := st.chat_input("Ask a question..."):
             "content": buf,
             "sources": sources_meta,
         })
+
+# --------------------------------------------------------------------------- #
+# Footer / how it works
+# --------------------------------------------------------------------------- #
+with st.expander("How this works"):
+    st.markdown(
+        "1. **Chunk** documents and embed them with MiniLM\n"
+        "2. **Retrieve** the top candidates via FAISS\n"
+        "3. **Rerank** with a cross-encoder for quality\n"
+        "4. **Generate** a written answer from an LLM, grounded in the passages\n"
+        "5. **Cite** sources on every reply\n"
+        "6. **Remember** prior turns so follow-up questions feel natural"
+    )
