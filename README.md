@@ -3,6 +3,9 @@
 A small chatbot that answers questions about your own documents and shows the passages it pulled the answer from, so you can check the receipts.
 
 <p>
+  <a href="https://nanettetada-doc-grounded-rag-appstreamlit-app-dsfjsw.streamlit.app">
+    <img alt="Live demo" src="https://img.shields.io/badge/Open_chat-Live_demo-5B5BD6?style=flat-square&logo=streamlit&logoColor=white" />
+  </a>
   <img alt="Python"   src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" />
   <img alt="FAISS"    src="https://img.shields.io/badge/FAISS-009688?style=flat-square" />
   <img alt="MiniLM"   src="https://img.shields.io/badge/MiniLM-FFD21E?style=flat-square&logo=huggingface&logoColor=black" />
